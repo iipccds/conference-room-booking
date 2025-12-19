@@ -1,0 +1,240 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import createRoom from "@/app/actions/createRoom";
+import { FiPlusCircle } from "react-icons/fi";
+import { CreateRoomButton } from "./CreateRoomButton";
+
+const CreateRoomForm = ({ user, admins }) => {
+  const [state, formAction] = useActionState(createRoom, {});
+  const router = useRouter();
+
+  const PRESET_AMENITIES = [
+    "Projector",
+    "Whiteboard",
+    "WiFi",
+    "Video Conferencing",
+    "Television",
+    "Podium",
+    "Audio System",
+    "Smart Screen",
+  ];
+  const [amenities, setAmenities] = useState("");
+
+  const handleAmenityClick = (amenityToAdd) => {
+    const currentAmenities = amenities
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
+    if (currentAmenities.includes(amenityToAdd)) {
+      return;
+    }
+    const newAmenities = [...currentAmenities, amenityToAdd].join(", ");
+    setAmenities(newAmenities);
+  };
+
+  useEffect(() => {
+    if (state.error) {
+      toast.error(state.error);
+    }
+    if (state.success) {
+      toast.success("Room created successfully!");
+      router.push("/");
+    }
+  }, [state, router]);
+
+  return (
+    <>
+      <div className="bg-white shadow-md border border-gray-200 rounded-lg p-8 w-full max-w-7xl mx-auto mt-6">
+        <form action={formAction}>
+          {/* -- Main Details Section -- */}
+          <div className="mb-6">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Room Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-400"
+              placeholder="e.g., Large Conference Room"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={4}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-400"
+              placeholder="Enter a detailed description for the room"
+              required
+            ></textarea>
+          </div>
+
+          {/* -- Grid Section for Room Specs -- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label
+                htmlFor="sqft"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Square Feet
+              </label>
+              <input
+                type="number"
+                id="sqft"
+                name="sqft"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-400"
+                placeholder="e.g., 500"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="capacity"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Capacity
+              </label>
+              <input
+                type="number"
+                id="capacity"
+                name="capacity"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-400"
+                placeholder="e.g., 12"
+                required
+              />
+            </div>
+          </div>
+
+          {/* -- Location, Amenities, and Manager Section -- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label
+                htmlFor="location"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Location
+              </label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-400"
+                placeholder="e.g., Building A, Floor 2, Room 204"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="availability"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Availability
+              </label>
+              <input
+                type="text"
+                id="availability"
+                name="availability"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-400"
+                placeholder="e.g., Monday - Friday, 9am - 5pm"
+                required
+              />
+            </div>
+
+            <div className="md:col-span-1">
+              <label
+                htmlFor="amenities"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Amenities
+              </label>
+              <input
+                type="text"
+                id="amenities"
+                name="amenities"
+                value={amenities}
+                onChange={(e) => setAmenities(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="Select from presets or type your own"
+                required
+              />
+              <div className="flex flex-wrap gap-2 mt-3">
+                {PRESET_AMENITIES.map((amenity) => (
+                  <button
+                    key={amenity}
+                    type="button"
+                    onClick={() => handleAmenityClick(amenity)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-full hover:bg-blue-100 transition-colors"
+                  >
+                    <FiPlusCircle />
+                    {amenity}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* --- NEW Room Manager Dropdown --- */}
+            <div className="md:col-span-1">
+              <label
+                htmlFor="room_manager"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Room Manager
+              </label>
+              <select
+                id="room_manager"
+                name="room_manager"
+                // Default to the currently logged-in user who is creating the room
+                defaultValue={
+                  admins?.find((admin) => admin.user_id === user?.user?.id)?.$id
+                }
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              >
+                {admins?.map((admin) => (
+                  <option key={admin.$id} value={admin.$id}>
+                    {admin.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* -- Image Upload Section -- */}
+          <div className="mb-8">
+            <label
+              htmlFor="image"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Image <span className="text-xs">(Max 1MB)</span>
+            </label>
+            <input
+              type="file"
+              id="image"
+              name="image"
+              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <CreateRoomButton buttonText="Save Room" />
+          </div>
+        </form>
+      </div>
+    </>
+  );
+};
+
+export default CreateRoomForm;
