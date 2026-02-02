@@ -100,7 +100,7 @@ async function bookRoom(previousState, formData) {
         })
         .replace(", ", "T"),
     };
-    console.log(bookingData);
+
     const { databases } = await createSessionClient(sessionCookie.value);
     await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
