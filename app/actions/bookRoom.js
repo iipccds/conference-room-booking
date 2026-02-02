@@ -88,17 +88,7 @@ async function bookRoom(previousState, formData) {
       booking_status: "Pending",
       meeting_description: meeting_description,
       meeting_type: meeting_type,
-      request_time: new Date()
-        .toLocaleString("en-CA", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-        .replace(", ", "T"),
+      request_time: "2026-02-05T09:00",
     };
     console.log(bookingData);
     const { databases } = await createSessionClient(sessionCookie.value);
