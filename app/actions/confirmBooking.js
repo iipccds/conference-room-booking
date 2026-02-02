@@ -29,14 +29,14 @@ async function confirmBooking(bookingId) {
     const bookingToConfirm = await databases.getDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
-      bookingId
+      bookingId,
     );
     // 2. Check for conflicting CONFIRMED bookings before confirming this one.
     const availability = await checkRoomAvailability(
       bookingToConfirm.room_id.$id,
       bookingToConfirm.check_in,
       bookingToConfirm.check_out,
-      bookingId // Pass the current booking ID to exclude it from the check
+      bookingId, // Pass the current booking ID to exclude it from the check
     );
 
     if (!availability.available) {
@@ -62,7 +62,7 @@ async function confirmBooking(bookingId) {
             hour12: false,
           })
           .replace(", ", "T"),
-      }
+      },
     );
 
     revalidatePath("/bookings", "layout");
@@ -71,7 +71,7 @@ async function confirmBooking(bookingId) {
     const userResponse = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_USERS,
-      [Query.equal("user_id", bookingToConfirm.user_id)]
+      [Query.equal("user_id", bookingToConfirm.user_id)],
     );
 
     if (userResponse.documents.length === 0) {

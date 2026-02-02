@@ -71,7 +71,7 @@ async function bookRoom(previousState, formData) {
     const availabilityResult = await checkRoomAvailability(
       roomId,
       checkInDateTime,
-      checkOutDateTime
+      checkOutDateTime,
     );
     if (!availabilityResult.available) {
       return { error: availabilityResult.error };
@@ -100,13 +100,13 @@ async function bookRoom(previousState, formData) {
         })
         .replace(", ", "T"),
     };
-
+    console.log(bookingData);
     const { databases } = await createSessionClient(sessionCookie.value);
     await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
       ID.unique(),
-      bookingData
+      bookingData,
     );
 
     revalidatePath("/bookings", "layout");
