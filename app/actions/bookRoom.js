@@ -60,8 +60,13 @@ async function bookRoom(previousState, formData) {
       return { error: "Attendees must be at least 1." };
     }
 
-    const checkInDateTime = `${checkInDate}T${checkInTime}`;
-    const checkOutDateTime = `${checkOutDate}T${checkOutTime}`;
+    // Fix: Force IST timezone (+05:30) interpretation for inputs
+    const checkInDateTime = new Date(
+      `${checkInDate}T${checkInTime}+05:30`,
+    ).toISOString();
+    const checkOutDateTime = new Date(
+      `${checkOutDate}T${checkOutTime}+05:30`,
+    ).toISOString();
 
     if (new Date(checkInDateTime) >= new Date(checkOutDateTime)) {
       return { error: "Check-out must be after check-in." };
@@ -88,17 +93,7 @@ async function bookRoom(previousState, formData) {
       booking_status: "Pending",
       meeting_description: meeting_description,
       meeting_type: meeting_type,
-      request_time: new Date()
-        .toLocaleString("en-CA", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-        .replace(", ", "T"),
+      request_time: new Date().toISOString(),
     };
 
     const { databases } = await createSessionClient(sessionCookie.value);
@@ -117,10 +112,12 @@ async function bookRoom(previousState, formData) {
       check_in: new Date(checkInDateTime).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
       check_out: new Date(checkOutDateTime).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
       adminEmail: adminEmail,
     };

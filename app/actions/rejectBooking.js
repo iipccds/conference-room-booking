@@ -30,18 +30,8 @@ async function rejectBooking(bookingId, reason) {
       {
         booking_status: "Declined",
         cancellation_reason: reason,
-        confirm_cancel_time: new Date()
-          .toLocaleString("en-CA", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-          })
-          .replace(", ", "T"),
-      }
+        confirm_cancel_time: new Date().toISOString(),
+      },
     );
 
     revalidatePath("/bookings", "layout");
@@ -51,14 +41,14 @@ async function rejectBooking(bookingId, reason) {
     const bookingToCancel = await databases.getDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
-      bookingId
+      bookingId,
     );
 
     // 2️⃣ Query user details to find their email for the notification
     const userResponse = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_USERS,
-      [Query.equal("user_id", bookingToCancel.user_id)]
+      [Query.equal("user_id", bookingToCancel.user_id)],
     );
 
     if (userResponse.documents.length === 0) {
@@ -75,10 +65,12 @@ async function rejectBooking(bookingId, reason) {
       check_in: new Date(bookingToCancel.check_in).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
       check_out: new Date(bookingToCancel.check_out).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
     };
 

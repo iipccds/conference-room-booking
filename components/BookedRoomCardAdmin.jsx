@@ -13,11 +13,14 @@ import {
 } from "react-icons/fa";
 import { FiHome, FiUsers, FiInfo } from "react-icons/fi";
 
-// Helper function remains unchanged.
+// Define timezone constant for consistency
+const USER_TIMEZONE = "Asia/Kolkata";
+
 const formatDate = (dateString) => {
-  return DateTime.fromISO(dateString, { zone: "utc" }).toFormat(
-    "MMM d 'at' h:mm a"
-  );
+  if (!dateString) return "—";
+  return DateTime.fromISO(dateString, { zone: "utc" })
+    .setZone(USER_TIMEZONE)
+    .toFormat("MMM d 'at' h:mm a");
 };
 
 // StatusBadge component remains unchanged.
@@ -51,7 +54,8 @@ function BookedRoomCardAdmin({ booking }) {
   const { room_id: room } = booking;
 
   // A booking is actionable by an admin only if its check-in time is in the future.
-  const isActionable = new Date(booking.check_in) > new Date();
+  const isActionable =
+    DateTime.fromISO(booking.check_in, { zone: "utc" }) > DateTime.utc();
 
   // Get the appropriate background class
   const cardBgClass =

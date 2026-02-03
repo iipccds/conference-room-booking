@@ -13,11 +13,14 @@ import {
 import { FiHome, FiInfo, FiUsers } from "react-icons/fi";
 import RescheduleBookingButton from "./RescheduleBookingButton";
 
-// Helper function using Luxon is excellent, no changes needed.
+// Define timezone constant for consistency
+const USER_TIMEZONE = "Asia/Kolkata";
+
 const formatDate = (dateString) => {
-  return DateTime.fromISO(dateString, { zone: "utc" }).toFormat(
-    "MMM d 'at' h:mm a"
-  );
+  if (!dateString) return "—";
+  return DateTime.fromISO(dateString, { zone: "utc" }) // 1. Parse as UTC
+    .setZone(USER_TIMEZONE) // 2. Convert to IST
+    .toFormat("MMM d 'at' h:mm a"); // 3. Format
 };
 
 // StatusBadge component remains the same.
@@ -55,7 +58,7 @@ function BookedRoomCard({ booking }) {
   const isCancellable =
     (booking.booking_status === "Pending" ||
       booking.booking_status === "Confirmed") &&
-    new Date(booking.check_in) > new Date();
+    DateTime.fromISO(booking.check_in, { zone: "utc" }) > DateTime.utc();
 
   // Get the appropriate background class based on the booking status
   // Default to white if status is not matched (e.g., new status type)

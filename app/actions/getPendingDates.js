@@ -9,15 +9,26 @@ export async function getPendingDates(roomId) {
   const bookings = await databases.listDocuments(
     process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
     process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
-    [Query.equal("room_id", roomId), Query.equal("booking_status", "Pending")]
+    [Query.equal("room_id", roomId), Query.equal("booking_status", "Pending")],
   );
 
   const pendingDates = [];
 
   // Expand each booking's date range from check_in to check_out into individual booked dates
   bookings.documents.forEach((booking) => {
-    const checkInDateStr = booking.check_in.split("T")[0];
-    const checkOutDateStr = booking.check_out.split("T")[0];
+    // Fix: Convert UTC booking times to IST date strings to ensure correct day is blocked
+    const checkInDateStr = new Date(booking.check_in).toLocaleDateString(
+      "en-CA",
+      {
+        timeZone: "Asia/Kolkata",
+      },
+    );
+    const checkOutDateStr = new Date(booking.check_out).toLocaleDateString(
+      "en-CA",
+      {
+        timeZone: "Asia/Kolkata",
+      },
+    );
 
     let currentDate = new Date(checkInDateStr);
     const endDate = new Date(checkOutDateStr);

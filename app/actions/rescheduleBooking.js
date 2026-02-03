@@ -47,8 +47,13 @@ export default async function rescheduleBooking(previousState, formData) {
       return { error: "All date, time, and event name fields are required." };
     }
 
-    const checkInDateTime = `${checkInDate}T${checkInTime}`;
-    const checkOutDateTime = `${checkOutDate}T${checkOutTime}`;
+    // Fix: Force IST timezone (+05:30) interpretation for inputs
+    const checkInDateTime = new Date(
+      `${checkInDate}T${checkInTime}+05:30`,
+    ).toISOString();
+    const checkOutDateTime = new Date(
+      `${checkOutDate}T${checkOutTime}+05:30`,
+    ).toISOString();
 
     if (new Date(checkInDateTime) >= new Date(checkOutDateTime)) {
       return { error: "Check-out must be after check-in." };
@@ -80,13 +85,13 @@ export default async function rescheduleBooking(previousState, formData) {
         meeting_description: meeting_description,
         meeting_type: meeting_type,
         booking_status: "Pending", // Status resets to Pending for re-approval
-      }
+      },
     );
     // Get room & admin email
     const room = await databases.getDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
-      roomId
+      roomId,
     );
 
     const adminEmail = room.room_manager.email;
@@ -110,10 +115,12 @@ export default async function rescheduleBooking(previousState, formData) {
       check_in_formatted: new Date(checkInDateTime).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
       check_out_formatted: new Date(checkOutDateTime).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
     };
 

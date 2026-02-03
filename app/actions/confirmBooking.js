@@ -51,17 +51,7 @@ async function confirmBooking(bookingId) {
       bookingId,
       {
         booking_status: "Confirmed",
-        confirm_cancel_time: new Date()
-          .toLocaleString("en-CA", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-          })
-          .replace(", ", "T"),
+        confirm_cancel_time: new Date().toISOString(),
       },
     );
 
@@ -88,10 +78,12 @@ async function confirmBooking(bookingId) {
       check_in: new Date(bookingToConfirm.check_in).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
       check_out: new Date(bookingToConfirm.check_out).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: "Asia/Kolkata",
       }),
     };
 

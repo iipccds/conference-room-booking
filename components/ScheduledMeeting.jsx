@@ -1,90 +1,126 @@
 "use client";
+
 import { useState, useMemo, useEffect } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import { DateTime } from "luxon";
 import MeetingCard from "./MeetingCard";
 import { FiCalendar } from "react-icons/fi";
 
-const createLocalDate = (dateStr) => {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
+/* =====================================================
+   GLOBAL TIME CONFIG
+===================================================== */
+const USER_TIMEZONE = "Asia/Kolkata";
 
-const toYYYYMMDD = (date) => {
+/* =====================================================
+   HELPERS (SAFE)
+===================================================== */
+// JS Date from DayPicker is already local — DO NOT override zone
+const toISODate = (date) => {
   if (!date) return null;
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return DateTime.fromJSDate(date).toISODate();
 };
 
+/* =====================================================
+   COMPONENT
+===================================================== */
 const ScheduledMeeting = ({ meetings }) => {
-  const [selected, setSelected] = useState(new Date());
+  /* ================= STATE ================= */
+  const [selected, setSelected] = useState(() => new Date());
   const [isListVisible, setIsListVisible] = useState(true);
 
+  // 🔴 CRITICAL FIX FOR VERCEL SSR
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleDateSelect = (date) => {
-    // Only update if a date is actually selected, preventing deselection on re-click.
-    if (date) {
-      setSelected(date);
-    }
+    if (date) setSelected(date);
   };
 
-  const meetingDateObjects = useMemo(
-    () =>
-      meetings.flatMap((m) => {
-        const dates = [];
-        const start = createLocalDate(m.check_in.slice(0, 10));
-        const end = createLocalDate(m.check_out.slice(0, 10));
-        let current = new Date(start);
-        while (current <= end) {
-          dates.push(new Date(current));
-          current.setDate(current.getDate() + 1);
-        }
-        return dates;
-      }),
-    [meetings]
-  );
+  /* =====================================================
+     CALENDAR MARKED DATES (MULTI-DAY SAFE)
+  ===================================================== */
+  const meetingDateObjects = useMemo(() => {
+    return meetings.flatMap((meeting) => {
+      const dates = [];
 
+      const start = DateTime.fromISO(meeting.check_in, { zone: "utc" })
+        .setZone(USER_TIMEZONE)
+        .startOf("day");
+
+      const end = DateTime.fromISO(meeting.check_out, { zone: "utc" })
+        .setZone(USER_TIMEZONE)
+        .startOf("day");
+
+      let current = start;
+
+      while (current <= end) {
+        dates.push(current.toJSDate());
+        current = current.plus({ days: 1 });
+      }
+
+      return dates;
+    });
+  }, [meetings]);
+
+  /* =====================================================
+     FILTER MEETINGS FOR SELECTED DAY
+  ===================================================== */
   const filteredMeetings = useMemo(() => {
     if (!selected) return [];
-    const selectedStr = toYYYYMMDD(selected);
+
+    const selectedISO = toISODate(selected);
+
     return meetings.filter((meeting) => {
-      const startStr = meeting.check_in.slice(0, 10);
-      const endStr = meeting.check_out.slice(0, 10);
-      return selectedStr >= startStr && selectedStr <= endStr;
+      const startISO = DateTime.fromISO(meeting.check_in, { zone: "utc" })
+        .setZone(USER_TIMEZONE)
+        .toISODate();
+
+      const endISO = DateTime.fromISO(meeting.check_out, { zone: "utc" })
+        .setZone(USER_TIMEZONE)
+        .toISODate();
+
+      return selectedISO >= startISO && selectedISO <= endISO;
     });
   }, [meetings, selected]);
 
+  /* =====================================================
+     ANIMATION TRIGGER
+  ===================================================== */
   useEffect(() => {
     setIsListVisible(false);
-    const timer = setTimeout(() => {
-      setIsListVisible(true);
-    }, 100);
+    const timer = setTimeout(() => setIsListVisible(true), 100);
     return () => clearTimeout(timer);
   }, [selected]);
 
-  // --- START OF CHANGE ---
+  /* =====================================================
+     TITLE (TODAY VS OTHER DAY)
+  ===================================================== */
   const title = useMemo(() => {
-    if (!selected) {
-      return "Select a date"; // Fallback title when no date is selected
-    }
-    const isToday = toYYYYMMDD(selected) === toYYYYMMDD(new Date());
-    return isToday
+    if (!selected) return "Select a date";
+
+    const todayISO = DateTime.now().setZone(USER_TIMEZONE).toISODate();
+
+    const selectedISO = toISODate(selected);
+
+    return selectedISO === todayISO
       ? "Meetings Today"
-      : `Meetings on ${selected.toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}`;
+      : `Meetings on ${DateTime.fromJSDate(selected).toFormat("dd MMM yyyy")}`;
   }, [selected]);
 
+  /* =====================================================
+     RENDER
+  ===================================================== */
   return (
     <div className="flex flex-col md:flex-row lg:flex-col gap-6 lg:items-center">
+      {/* ================= MEETING LIST ================= */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-fit p-4 w-full md:w-1/2 lg:w-full">
         <h2 className="text-lg font-bold text-gray-900 text-center border-b border-gray-100 pb-3 mb-4">
-          {/* Use the new title variable here */}
           {title}
         </h2>
+
         {filteredMeetings.length > 0 ? (
           <div className="space-y-4 overflow-y-auto pr-2">
             {filteredMeetings.map((meeting, index) => (
@@ -109,21 +145,24 @@ const ScheduledMeeting = ({ meetings }) => {
         )}
       </div>
 
+      {/* ================= CALENDAR ================= */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-fit flex justify-center w-full md:w-1/2 lg:w-full">
-        <DayPicker
-          mode="single"
-          selected={selected}
-          onSelect={handleDateSelect}
-          modifiers={{ hasMeeting: meetingDateObjects }}
-          modifiersStyles={{
-            hasMeeting: {
-              backgroundColor: "#E0E7FF",
-              color: "#3730A3",
-              fontWeight: "bold",
-            },
-          }}
-          className="p-4"
-        />
+        {mounted && (
+          <DayPicker
+            mode="single"
+            selected={selected}
+            onSelect={handleDateSelect}
+            modifiers={{ hasMeeting: meetingDateObjects }}
+            modifiersStyles={{
+              hasMeeting: {
+                backgroundColor: "#E0E7FF",
+                color: "#3730A3",
+                fontWeight: "bold",
+              },
+            }}
+            className="p-4"
+          />
+        )}
       </div>
     </div>
   );

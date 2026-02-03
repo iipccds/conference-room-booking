@@ -3,11 +3,17 @@ import React from "react";
 import { FiClock, FiUsers, FiHome } from "react-icons/fi";
 import { DateTime } from "luxon";
 
+const USER_TIMEZONE = "Asia/Kolkata";
+
 export default function MeetingCard({ meeting }) {
   const { room_id: room } = meeting;
 
-  const checkInDt = DateTime.fromISO(meeting.check_in, { zone: "utc" });
-  const checkOutDt = DateTime.fromISO(meeting.check_out, { zone: "utc" });
+  const checkInDt = DateTime.fromISO(meeting.check_in, { zone: "utc" }).setZone(
+    USER_TIMEZONE,
+  );
+  const checkOutDt = DateTime.fromISO(meeting.check_out, {
+    zone: "utc",
+  }).setZone(USER_TIMEZONE);
 
   const isSingleDay = checkInDt.hasSame(checkOutDt, "day");
 
@@ -15,11 +21,11 @@ export default function MeetingCard({ meeting }) {
 
   if (isSingleDay) {
     displayDate = `${checkInDt.toFormat("MMM d")}, ${checkInDt.toFormat(
-      "h:mm a"
+      "h:mm a",
     )} - ${checkOutDt.toFormat("h:mm a")}`;
   } else {
     displayDate = `${checkInDt.toFormat(
-      "MMM d, h:mm a"
+      "MMM d, h:mm a",
     )} - ${checkOutDt.toFormat("MMM d, h:mm a")}`;
   }
 
