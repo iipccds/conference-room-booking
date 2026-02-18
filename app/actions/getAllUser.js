@@ -26,7 +26,11 @@ async function getAllUser() {
     const { documents: users } = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_USERS,
-      [Query.notEqual("user_id", user.id)]
+      [
+        Query.notEqual("user_id", user.id),
+        Query.limit(5000),
+        Query.orderDesc("$createdAt"),
+      ],
     );
 
     // Revalidate the cache for this path
