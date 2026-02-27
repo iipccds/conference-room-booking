@@ -28,7 +28,11 @@ async function getNewBookings() {
     const { documents: bookings } = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
-      [Query.limit(5000), Query.orderDesc("$createdAt")],
+      [
+        Query.limit(5000),
+        Query.orderDesc("booking_status"),
+        Query.orderDesc("$createdAt"),
+      ],
     );
     return bookings;
   } catch (error) {
