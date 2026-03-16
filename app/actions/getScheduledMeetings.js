@@ -13,7 +13,7 @@ async function getScheduledMeetings() {
     const { documents: meetings } = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
-      [Query.equal("booking_status", "Confirmed")]
+      [Query.equal("booking_status", "Confirmed"), Query.limit(5000)],
     );
 
     // Revalidate the cache for this path
